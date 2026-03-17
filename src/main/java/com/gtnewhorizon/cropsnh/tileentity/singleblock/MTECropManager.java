@@ -6,7 +6,6 @@ import static com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil.ge
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -322,7 +321,6 @@ public class MTECropManager extends MTETieredMachineBlock implements IAddUIWidge
         if (!this.mDropOverflow.isEmpty()) return;
 
         // else collect all the drops
-        Map<ItemStack, Integer> dropTracker = new ItemStackMap<>(true);
         for (ICropStickTile crop : this.mCropCache) {
             if (crop == null) {
                 this.mInvalidCache = true;
@@ -342,25 +340,18 @@ public class MTECropManager extends MTETieredMachineBlock implements IAddUIWidge
                             .getStats()
                             .getGain());
                 }
-                dropTracker.merge(aStack, aStack.stackSize, Integer::sum);
+                this.mDropOverflow.merge(aStack, aStack.stackSize, Integer::sum);
             }
             this.getBaseMetaTileEntity()
                 .decreaseStoredEnergyUnits(this.powerUsage(), false);
         }
 
         // dump everything we can into the inventory
-        for (Map.Entry<ItemStack, Integer> dropEntry : dropTracker.entrySet()) {
-            ItemStack dropItem = dropEntry.getKey();
-            int remaining = dropEntry.getValue();
-
-            // how this can happen, idk
-            if (dropItem == null) continue;
-
-            remaining = tryInsertOutputStack(dropItem, remaining);
-            if (remaining >= 0) {
-                this.mDropOverflow.merge(dropEntry.getKey(), dropEntry.getValue(), Integer::sum);
-            }
-        }
+        this.mDropOverflow.entrySet()
+            .removeIf((overflowEntry) -> {
+                overflowEntry.setValue(tryInsertOutputStack(overflowEntry.getKey(), overflowEntry.getValue()));
+                return overflowEntry.getValue() <= 0;
+            });
     }
 
     private int tryInsertOutputStack(ItemStack aDropItem, int remaining) {
