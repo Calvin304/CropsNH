@@ -310,11 +310,7 @@ public class MTECropManager extends MTETieredMachineBlock implements IAddUIWidge
         // first attempt to empty the drop overflow back into the machine
         // is empty and size, work around it
         if (!this.mDropOverflow.isEmpty()) {
-            this.mDropOverflow.entrySet()
-                .removeIf((overflowEntry) -> {
-                    overflowEntry.setValue(tryInsertOutputStack(overflowEntry.getKey(), overflowEntry.getValue()));
-                    return overflowEntry.getValue() <= 0;
-                });
+            this.tryInsertDropOverflow();
         }
 
         // if anything remains in the drop queue skip harvesting
@@ -347,9 +343,13 @@ public class MTECropManager extends MTETieredMachineBlock implements IAddUIWidge
         }
 
         // dump everything we can into the inventory
+        this.tryInsertDropOverflow();
+    }
+
+    private void tryInsertDropOverflow() {
         this.mDropOverflow.entrySet()
             .removeIf((overflowEntry) -> {
-                overflowEntry.setValue(tryInsertOutputStack(overflowEntry.getKey(), overflowEntry.getValue()));
+                overflowEntry.setValue(this.tryInsertOutputStack(overflowEntry.getKey(), overflowEntry.getValue()));
                 return overflowEntry.getValue() <= 0;
             });
     }
