@@ -347,11 +347,41 @@ public class MTECropManager extends MTETieredMachineBlock implements IAddUIWidge
     }
 
     private void tryInsertDropOverflow() {
-        this.mDropOverflow.entrySet()
-            .removeIf((overflowEntry) -> {
-                overflowEntry.setValue(this.tryInsertOutputStack(overflowEntry.getKey(), overflowEntry.getValue()));
-                return overflowEntry.getValue() <= 0;
-            });
+        for (int slot = SLOT_OUTPUT_START; slot <= SLOT_OUTPUT_END && !this.mDropOverflow.isEmpty(); slot++) {
+            // compute the max we can transfer at once.
+            ItemStack invStack = mInventory[slot];
+
+            // If the slot is empty or invalid just override the slot with a stack of what ever we are carrying.
+            if (GTUtility.isStackInvalid(invStack)) {
+                invStack = GTUtility.copyAmount(
+                    0,
+                    this.mDropOverflow.keySet()
+                        .iterator()
+                        .next());
+            }
+
+            if (!this.mDropOverflow.containsKey(invStack)) continue;
+
+            int maxStackSize = Math.min(invStack.getMaxStackSize(), this.getInventoryStackLimit());
+            int maxConsume = maxStackSize - invStack.stackSize;
+            if (maxConsume <= 0) continue;
+
+            int inOverflow = this.mDropOverflow.get(invStack);
+
+            int toConsume = Math.min(maxConsume, inOverflow);
+            if (toConsume <= 0) continue;
+
+            // do the transfer
+
+            invStack.stackSize += toConsume;
+            inOverflow -= toConsume;
+
+            if (inOverflow <= 0) this.mDropOverflow.remove(invStack);
+            else this.mDropOverflow.put(invStack, inOverflow);
+
+            this.getBaseMetaTileEntity()
+                .setInventorySlotContents(slot, invStack);
+        }
     }
 
     private int tryInsertOutputStack(ItemStack aDropItem, int remaining) {
