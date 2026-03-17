@@ -294,8 +294,10 @@ public class MTECropManager extends MTETieredMachineBlock implements IAddUIWidge
     // region harvesting
 
     public boolean doesInventoryHaveSpace() {
-        for (int i = SLOT_OUTPUT_START; i < this.getSizeInventory(); i++) {
-            if (this.mInventory[i] == null || this.mInventory[i].stackSize < 64) {
+        for (int slot = SLOT_OUTPUT_START; slot <= SLOT_OUTPUT_END; slot++) {
+            ItemStack invStack = this.mInventory[slot];
+            if (invStack == null
+                || invStack.stackSize < Math.min(invStack.getMaxStackSize(), this.getInventoryStackLimit())) {
                 return true;
             }
         }
