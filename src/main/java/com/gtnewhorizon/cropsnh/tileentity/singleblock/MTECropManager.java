@@ -384,36 +384,6 @@ public class MTECropManager extends MTETieredMachineBlock implements IAddUIWidge
         }
     }
 
-    private int tryInsertOutputStack(ItemStack aDropItem, int remaining) {
-        for (int slot = SLOT_OUTPUT_START; slot <= SLOT_OUTPUT_END && remaining > 0; slot++) {
-            // compute the max we can transfer at once.
-            ItemStack invStack = mInventory[slot];
-            int maxStackSize = Math.min(aDropItem.getMaxStackSize(), this.getInventoryStackLimit());
-            int maxConsume = Math.min(maxStackSize, remaining);
-            if (maxConsume <= 0) return remaining;
-
-            // If the slot is empty or invalid just override the slot with a stack of what ever we are carrying.
-            if (GTUtility.isStackInvalid(invStack)) {
-                ItemStack newStack = aDropItem.copy();
-                remaining -= newStack.stackSize = maxConsume;
-                this.getBaseMetaTileEntity()
-                    .setInventorySlotContents(slot, newStack);
-            }
-            // else if it's the same item type and it has space remaining, increase the existsing stack by what ever we
-            // need
-            else if (invStack.stackSize < maxStackSize && GTUtility.areStacksEqual(invStack, aDropItem, false)) {
-                int toConsume = Math.max(0, Math.min(maxConsume, maxStackSize - invStack.stackSize));
-                invStack.stackSize += toConsume;
-                remaining -= toConsume;
-                this.markDirty();
-            }
-            if (remaining <= 0) break;
-        }
-
-        // tell em how much stuff they got remaining.
-        return remaining;
-    }
-
     // endregion harvesting
 
     // region secondary actions
