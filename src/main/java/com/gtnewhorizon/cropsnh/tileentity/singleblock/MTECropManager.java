@@ -305,13 +305,10 @@ public class MTECropManager extends MTETieredMachineBlock implements IAddUIWidge
 
     public void harvest() {
         // if harvest isn't enabled, don't
-        if (!this.mHarvestEnabled || !doesInventoryHaveSpace()) return;
+        if (!this.mHarvestEnabled) return;
 
         // first attempt to empty the drop overflow back into the machine
-        // is empty and size, work around it
-        if (!this.mDropOverflow.isEmpty()) {
-            this.tryInsertDropOverflow();
-        }
+        this.tryInsertDropOverflow();
 
         // if anything remains in the drop queue skip harvesting
         if (!this.mDropOverflow.isEmpty()) return;
